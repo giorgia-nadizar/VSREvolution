@@ -26,15 +26,14 @@ import it.units.erallab.builder.evolver.*;
 import it.units.erallab.builder.phenotype.FGraph;
 import it.units.erallab.builder.phenotype.MLP;
 import it.units.erallab.builder.phenotype.PruningMLP;
+import it.units.erallab.builder.phenotype.RNN;
 import it.units.erallab.builder.robot.*;
 import it.units.erallab.hmsrobots.core.controllers.Controller;
 import it.units.erallab.hmsrobots.core.controllers.MultiLayerPerceptron;
 import it.units.erallab.hmsrobots.core.controllers.PruningMultiLayerPerceptron;
 import it.units.erallab.hmsrobots.core.objects.Robot;
-import it.units.erallab.hmsrobots.core.objects.SensingVoxel;
 import it.units.erallab.hmsrobots.tasks.locomotion.Locomotion;
 import it.units.erallab.hmsrobots.tasks.locomotion.Outcome;
-import it.units.erallab.hmsrobots.util.Grid;
 import it.units.erallab.hmsrobots.util.RobotUtils;
 import it.units.malelab.jgea.Worker;
 import it.units.malelab.jgea.core.Individual;
@@ -369,6 +368,7 @@ public class LocomotionEvolution extends Worker {
     String sensorCentralized = "sensorCentralized-(?<nLayers>\\d+)";
     String mlp = "MLP-(?<ratio>\\d+(\\.\\d+)?)-(?<nLayers>\\d+)(-(?<actFun>(sin|tanh|sigmoid|relu)))?";
     String pruningMlp = "pMLP-(?<ratio>\\d+(\\.\\d+)?)-(?<nLayers>\\d+)-(?<actFun>(sin|tanh|sigmoid|relu))-(?<pruningTime>\\d+(\\.\\d+)?)-(?<pruningRate>0(\\.\\d+)?)-(?<criterion>(weight|abs_signal_mean|random))";
+    String rnn = "RNN-(?<recurrentNeurons>\\d+)";
     String directNumGrid = "directNumGrid";
     String functionNumGrid = "functionNumGrid";
     String fgraph = "fGraph";
@@ -464,6 +464,11 @@ public class LocomotionEvolution extends Worker {
 
       );
     }
+    if ((params = params(rnn, name)) != null) {
+      return new RNN(
+          Integer.parseInt(params.get("recurrentNeurons"))
+      );
+    }
     if ((params = params(fgraph, name)) != null) {
       return new FGraph();
     }
@@ -506,8 +511,8 @@ public class LocomotionEvolution extends Worker {
     if (transformationSequenceName.contains(SEQUENCE_SEPARATOR_CHAR)) {
       transformation = new SequentialFunction<>(getSequence(transformationSequenceName).entrySet().stream()
           .collect(Collectors.toMap(
-                  Map.Entry::getKey,
-                  e -> RobotUtils.buildRobotTransformation(e.getValue(), random)
+              Map.Entry::getKey,
+              e -> RobotUtils.buildRobotTransformation(e.getValue(), random)
               )
           ));
     } else {
@@ -518,8 +523,8 @@ public class LocomotionEvolution extends Worker {
     if (terrainSequenceName.contains(SEQUENCE_SEPARATOR_CHAR)) {
       task = new SequentialFunction<>(getSequence(terrainSequenceName).entrySet().stream()
           .collect(Collectors.toMap(
-                  Map.Entry::getKey,
-                  e -> buildLocomotionTask(e.getValue(), episodeT, random)
+              Map.Entry::getKey,
+              e -> buildLocomotionTask(e.getValue(), episodeT, random)
               )
           ));
     } else {
